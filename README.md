@@ -1,3 +1,5 @@
+[![Validate Skill](https://github.com/valeo-cash/x402-payments-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/valeo-cash/x402-payments-skill/actions/workflows/validate.yml)
+
 # x402 Payments Skill
 
 The first x402 developer skill for AI coding agents. Teaches Claude Code, Codex, Cursor, Windsurf, and Gemini CLI how to build x402 payment infrastructure — not just consume it.
@@ -11,6 +13,64 @@ One install. Your AI agent knows how to:
 - **Deploy on Base AND Solana** with USDC
 - **Orchestrate multi-endpoint payments** with [@x402sentinel/router](https://www.npmjs.com/package/@x402sentinel/router)
 - **Generate unified cryptographic receipts** with budget enforcement and audit trails
+
+## Quick Install
+
+```bash
+curl -sSL https://raw.githubusercontent.com/valeo-cash/x402-payments-skill/main/install.sh | bash
+```
+
+Auto-detects Claude Code, Codex CLI, and Cursor. Installs the skill to the right location.
+
+## Live Examples
+
+Two ready-to-clone projects in `examples/`:
+
+### Seller: Paid Joke API
+
+A Next.js API charging $0.001/request in USDC on Base Sepolia.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvaleo-cash%2Fx402-payments-skill%2Ftree%2Fmain%2Fexamples%2Fpaid-api-seller&env=WALLET_ADDRESS&envDescription=Your%20wallet%20address%20to%20receive%20USDC%20payments&project-name=x402-paid-api)
+
+```bash
+cd examples/paid-api-seller && npm install && npm run dev
+```
+
+### Buyer: Pay for APIs
+
+Node.js scripts that call paid endpoints — single and multi-endpoint with Sentinel Router.
+
+```bash
+cd examples/pay-for-api-buyer && npm install && npm run single
+```
+
+[→ See all examples](./examples/)
+
+## What's Inside the Skill
+
+The skill teaches your AI agent a decision tree:
+
+```
+User asks about x402 / paid APIs / agent payments
+  │
+  ├─ Are you the SELLER or BUYER?
+  │   ├─ Seller → Server middleware setup
+  │   └─ Buyer → Client fetch wrapper
+  │
+  ├─ Which CHAIN?
+  │   ├─ Base (EVM) → x402-next / @x402/next
+  │   ├─ Solana → x402-solana / @x402/svm
+  │   └─ Both → V2 multi-chain registration
+  │
+  └─ Need MULTI-ENDPOINT orchestration?
+      ├─ No → Basic x402 is enough
+      └─ Yes → Sentinel Payment Router
+              → Budget caps
+              → Parallel execution
+              → Unified cryptographic receipts
+```
+
+Full reference docs for every path: Base/EVM, Solana, Sentinel Router, and all 20+ npm packages in the x402 ecosystem.
 
 ## Install
 
@@ -58,6 +118,8 @@ cp -r x402-payments-skill/x402-payments .claude/skills/
 | `references/sentinel-router.md` | Payment Router — multi-endpoint orchestration, budget caps, receipts |
 | `references/packages.md` | Every x402 + Sentinel npm package with install commands |
 | `.cursorrules` | Drop-in rules file for Cursor/Windsurf projects |
+| `examples/paid-api-seller/` | Ready-to-deploy Next.js paid API (Vercel one-click) |
+| `examples/pay-for-api-buyer/` | Node.js scripts for calling paid APIs + Sentinel Router |
 
 ## x402 Protocol
 

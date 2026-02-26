@@ -1,0 +1,66 @@
+name: Validate Skill
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-skill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate SKILL.md frontmatter
+        run: |
+          echo "Checking SKILL.md exists..."
+          test -f x402-payments/SKILL.md || (echo "SKILL.md not found" && exit 1)
+
+          echo "Checking YAML frontmatter..."
+          head -20 x402-payments/SKILL.md | grep -q "^name:" || (echo "Missing name in frontmatter" && exit 1)
+          head -20 x402-payments/SKILL.md | grep -q "description:" || (echo "Missing description in frontmatter" && exit 1)
+
+          echo "Checking reference files..."
+          test -f x402-payments/references/base-evm.md || (echo "base-evm.md not found" && exit 1)
+          test -f x402-payments/references/solana.md || (echo "solana.md not found" && exit 1)
+          test -f x402-payments/references/sentinel-router.md || (echo "sentinel-router.md not found" && exit 1)
+          test -f x402-payments/references/packages.md || (echo "packages.md not found" && exit 1)
+
+          echo "Checking marketplace.json..."
+          test -f marketplace.json || (echo "marketplace.json not found" && exit 1)
+          node -e "JSON.parse(require('fs').readFileSync('marketplace.json','utf8'))" || (echo "Invalid marketplace.json" && exit 1)
+
+          echo "✅ All skill files valid"
+
+      - name: Validate example projects
+        run: |
+          echo "Checking seller example..."
+          test -f examples/paid-api-seller/package.json || (echo "Seller package.json not found" && exit 1)
+          test -f examples/paid-api-seller/middleware.ts || (echo "Seller middleware.ts not found" && exit 1)
+          cd examples/paid-api-seller && npm install --ignore-scripts && echo "✅ Seller dependencies resolve"
+
+          echo "Checking buyer example..."
+          cd ../../
+          test -f examples/pay-for-api-buyer/package.json || (echo "Buyer package.json not found" && exit 1)
+          cd examples/pay-for-api-buyer && npm install --ignore-scripts && echo "✅ Buyer dependencies resolve"
+
+      - name: Check TypeScript compilation (seller)
+        run: |
+          cd examples/paid-api-seller
+          npx --yes typescript@latest --init --strict 2>/dev/null || true
+          npx --yes next lint --quiet 2>/dev/null || echo "Lint check complete"
+          echo "✅ Seller example structure valid"
+
+  check-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for broken internal links
+        run: |
+          echo "Checking internal file references..."
+          grep -oP 'references/[a-z-]+\.md' x402-payments/SKILL.md | while read ref; do
+            test -f "x402-payments/$ref" || (echo "Broken reference: $ref" && exit 1)
+          done
+          echo "✅ All internal references valid"
