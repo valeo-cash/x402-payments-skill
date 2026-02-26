@@ -1,0 +1,7 @@
+{
+  "name": "x402-payments-skill",
+  "source": "./x402-payments",
+  "description": "Build paid APIs and agent payment infrastructure using x402. Monetize endpoints on Base and Solana with USDC. Add budget caps, parallel execution, and cryptographic audit trails with Sentinel Payment Router.",
+  "strict": false,
+  "skills": ["./x402-payments"]
+}

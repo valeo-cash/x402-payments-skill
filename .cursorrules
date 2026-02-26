@@ -1,0 +1,142 @@
+# x402 Payment Infrastructure Rules
+
+You are an expert in the x402 payment protocol, Sentinel audit infrastructure, and building paid APIs on Base (EVM) and Solana with USDC.
+
+## Core Knowledge
+
+x402 is an open payment protocol by Coinbase that uses HTTP 402 status codes to charge per-request for API access. Clients (humans or AI agents) pay in USDC at the moment of use. No API keys, subscriptions, or accounts.
+
+### Payment Flow
+1. Client → GET /api/data → Server
+2. Server ← 402 Payment Required (pricing in headers)
+3. Client → GET /api/data + X-PAYMENT header (signed tx authorization) → Server
+4. Server → verifies via Facilitator → settles USDC on-chain
+5. Client ← 200 OK (data)
+
+### Key Packages
+
+**Server (pick one per framework):**
+- V1 (simple): `x402-next`, `x402-express`
+- V2 (modular, multi-chain): `@x402/next`, `@x402/express`, `@x402/hono`
+- V2 core: `@x402/core` + `@x402/evm` (Base) + `@x402/svm` (Solana)
+
+**Client:**
+- V1: `x402-fetch` (wraps fetch, auto-handles 402s)
+- V2: `@x402/fetch`, `@x402/axios`
+- Solana: `x402-solana` (client + server)
+
+**Sentinel (audit + orchestration):**
+- `@x402sentinel/router` — multi-endpoint payments, budget caps, unified receipts
+- `@x402sentinel/test` — testing utilities
+
+### Networks
+- Base mainnet: `"base"` (V1) / `"eip155:8453"` (V2 CAIP-2)
+- Base Sepolia: `"base-sepolia"` / `"eip155:84532"`
+- Solana mainnet: `"solana-mainnet"` / `"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"`
+- Solana devnet: `"solana-devnet"` / `"solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"`
+
+### Facilitator
+- Public (free): `https://x402.org/facilitator`
+- Coinbase CDP: `@coinbase/x402` package (needs CDP_API_KEY_ID + CDP_API_KEY_SECRET)
+
+## Code Patterns
+
+### Server: Next.js on Base (V1 — fastest setup)
+```typescript
+// middleware.ts
+import { paymentMiddleware } from "x402-next";
+export const middleware = paymentMiddleware(
+  process.env.WALLET_ADDRESS!,
+  {
+    "/api/premium": {
+      price: "$0.01",
+      network: "base",
+      config: { description: "Premium access" },
+    },
+  },
+  { url: "https://x402.org/facilitator" }
+);
+export const config = { matcher: ["/api/premium/:path*"] };
+```
+
+### Server: Multi-chain (V2 — Base + Solana)
+```typescript
+// middleware.ts
+import { paymentProxy, x402ResourceServer } from "@x402/next";
+import { HTTPFacilitatorClient } from "@x402/core/server";
+import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { ExactSvmScheme } from "@x402/svm/exact/server";
+const facilitator = new HTTPFacilitatorClient({ url: "https://x402.org/facilitator" });
+const server = new x402ResourceServer(facilitator)
+  .register("eip155:8453", new ExactEvmScheme())
+  .register("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", new ExactSvmScheme());
+export const middleware = paymentProxy({
+  "/api/data": {
+    accepts: [
+      { scheme: "exact", price: "$0.01", network: "eip155:8453", payTo: "0xEvmAddr" },
+      { scheme: "exact", price: "$0.01", network: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", payTo: "SolAddr" },
+    ],
+    description: "Multi-chain premium data",
+  },
+}, server);
+```
+
+### Client: Pay for x402 endpoints (Base)
+```typescript
+import { wrapFetchWithPayment } from "x402-fetch";
+import { createWalletClient, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { base } from "viem/chains";
+const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
+const wallet = createWalletClient({ account, chain: base, transport: http() });
+const paidFetch = wrapFetchWithPayment(wallet);
+const response = await paidFetch("https://api.example.com/premium");
+```
+
+### Sentinel Payment Router: Multi-endpoint with budget + receipts
+```typescript
+import { PaymentRouter } from "@x402sentinel/router";
+
+const router = new PaymentRouter({
+  paymentFetch: paidFetch,
+  getPaymentInfo: () => null,
+  agentId: "my-agent",
+  apiKey: "sk_...",
+});
+
+const result = await router.execute({
+  name: "research-pipeline",
+  maxBudgetUsd: "0.10",
+  strategy: "parallel",
+  endpoints: [
+    { label: "email-verify", url: "https://api.example.com/verify?email=test@gmail.com" },
+    { label: "dns-lookup", url: "https://api.example.com/dns?domain=example.com" },
+  ],
+});
+// result.receipt.receiptHash — unified SHA-256 receipt
+// result.receipt.sentinelSig — HMAC server signature
+```
+
+## Rules
+
+1. **Never mix V1 and V2 server packages** in the same middleware stack
+2. **Always use USDC** — it's the only token with EIP-3009 support (gasless transfers)
+3. **Start on testnet** (`base-sepolia` or `solana-devnet`), switch to mainnet by changing the network string
+4. **Never commit private keys** — always use environment variables
+5. **Use Sentinel Router** when calling 2+ paid endpoints, or when budget enforcement / audit trails are needed
+6. **Facilitator is required** — either use the public one or set up Coinbase CDP
+7. **x402-fetch handles everything client-side** — don't manually parse 402 headers unless you need custom logic
+8. **Receipts are critical for production** — use Sentinel Router's unified receipts for audit compliance
+9. **V2 paymentProxy uses `accepts` array** (not `price`/`network` at top level like V1)
+10. **CAIP-2 identifiers in V2** — use `eip155:8453` not `base`, `solana:5eykt...` not `solana-mainnet`
+
+## Environment Variables
+```env
+WALLET_ADDRESS=0x...              # server: receiving wallet
+PRIVATE_KEY=0x...                 # client: signing wallet (NEVER commit)
+CDP_API_KEY_ID=...                # optional: Coinbase facilitator auth
+CDP_API_KEY_SECRET=...            # optional: Coinbase facilitator auth
+SENTINEL_SIGNING_KEY=...          # optional: HMAC key for receipt signatures
+SOLANA_WALLET_ADDRESS=...         # Solana receiving address
+SOLANA_PRIVATE_KEY=...            # Solana signing key (base58)
+```
