@@ -78,6 +78,12 @@ Full reference docs for every path: Base/EVM, Solana, Sentinel Router, and all 2
 
 ## Install
 
+### Claude.ai (Web / Mobile)
+
+1. Download [x402-payments.skill](https://github.com/valeo-cash/x402-payments-skill/releases/latest/download/x402-payments.skill)
+2. Go to **Settings → Skills**
+3. Upload the file
+
 ### Claude Code (Plugin Marketplace)
 
 ```bash
