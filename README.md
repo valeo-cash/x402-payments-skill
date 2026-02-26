@@ -6,7 +6,7 @@
 
 # x402 Payments Skill
 
-The first x402 developer skill for AI coding agents. Teaches Claude Code, Codex, Cursor, Windsurf, and Gemini CLI how to build x402 payment infrastructure — not just consume it.
+The most comprehensive x402 payments skill for AI coding agents. Teaches Claude Code, Codex, Cursor, Windsurf, and Gemini CLI how to build x402 payment infrastructure — not just consume it.
 
 ## What it does
 
