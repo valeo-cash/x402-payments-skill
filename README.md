@@ -1,5 +1,9 @@
 [![Validate Skill](https://github.com/valeo-cash/x402-payments-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/valeo-cash/x402-payments-skill/actions/workflows/validate.yml)
 
+[![x402 Compatible](https://img.shields.io/badge/x402-compatible-0052FF?style=for-the-badge&logo=coinbase&logoColor=white)](https://x402.org)
+[![Sentinel Router](https://img.shields.io/badge/Sentinel-Router-8B5CF6?style=for-the-badge)](https://www.npmjs.com/package/@x402sentinel/router)
+[![Agent Skill](https://img.shields.io/badge/Agent_Skill-SKILL.md-F97316?style=for-the-badge)](https://agentskills.io)
+
 # x402 Payments Skill
 
 The first x402 developer skill for AI coding agents. Teaches Claude Code, Codex, Cursor, Windsurf, and Gemini CLI how to build x402 payment infrastructure — not just consume it.
