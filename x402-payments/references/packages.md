@@ -71,6 +71,23 @@ Enterprise audit and orchestration infrastructure.
 
 ---
 
+## Chainlink CRE
+
+Chainlink CRE (Chainlink Runtime Environment) is a decentralized execution layer for on-chain/off-chain workflows. CRE is not an npm package — it's a CLI tool + SDK.
+
+| Tool | Purpose |
+|------|---------|
+| CRE CLI | Simulate and deploy CRE workflows |
+| CRE SDK | Build workflow triggers and callbacks in TypeScript |
+| Chainlink Price Feeds | On-chain price data (BTC, ETH, LINK, etc.) |
+| Pushover API | Push notifications to mobile devices |
+
+Install CRE CLI from: [docs.chain.link/cre/getting-started/cli-installation](https://docs.chain.link/cre/getting-started/cli-installation)
+
+See `references/chainlink-cre.md` for the complete integration guide.
+
+---
+
 ## Quick Install Commands
 
 ### Base only (V1 — simplest)

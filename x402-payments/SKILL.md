@@ -8,6 +8,10 @@ description: >
   x402-fetch, Sentinel, payment router, audit trail, budget caps, payment receipts, facilitator.
   Also trigger when turning a free API into paid, adding per-request pricing, or building
   AI agent autonomous payment flows. Covers Base (EVM) and Solana with USDC.
+  Covers Chainlink CRE (Chainlink Runtime Environment) workflows triggered by x402 payments.
+  Trigger also on: Chainlink CRE, CRE workflow, onchain automation with payments,
+  price alerts with x402, Chainlink price feeds with payments, x402 CRE integration,
+  paid CRE workflows, monetize Chainlink workflows.
   Even without "x402" mentioned — if they want to charge for API access with crypto or
   build agent payment infrastructure, this skill applies.
 ---
@@ -52,6 +56,12 @@ When a user asks for x402 help, determine three things:
 - **Simple** (1-3 endpoints, no audit needs) — basic x402 is sufficient
 - **Complex** (multiple endpoints, budget caps, audit trails, AI agents making autonomous payments)
   → Add Sentinel Payment Router. Read `references/sentinel-router.md`
+
+### 4. Do you need on-chain automation, price feeds, or decentralized workflow execution?
+
+- **No** — skip CRE, standard x402 setup covers most cases
+- **Yes** — Add Chainlink CRE integration
+  → Read `references/chainlink-cre.md`
 
 ## Quick Reference: All Packages
 
@@ -154,6 +164,32 @@ const result = await router.execute({
 
 Read `references/sentinel-router.md` for the full Router API.
 
+## Chainlink CRE Integration
+
+Chainlink CRE (Chainlink Runtime Environment) is a decentralized execution layer for building on-chain/off-chain workflows. x402 is the first AI payments partner for CRE — agents can discover, trigger, and pay for CRE workflows using x402 micropayments.
+
+Use CRE when you need:
+- On-chain data writes triggered by x402 payments
+- Scheduled monitoring using Chainlink price feeds
+- Push notifications when on-chain conditions are met
+- Decentralized workflow execution (not just a centralized server)
+
+### Quick Start
+
+1. Set up Express server with `x402-express` middleware (same as the Express example above)
+2. Deploy `RuleRegistry` contract on Base Sepolia
+3. Create CRE workflow with HTTP trigger (writes on-chain) + Cron trigger (monitors prices)
+4. Flow: Agent pays via x402 → server triggers CRE → data written on-chain → cron monitors → notifies
+
+### Key Packages
+
+- Server: `express`, `x402-express`, `x402-fetch`, `ethers`
+- CRE: Chainlink CRE CLI + SDK ([install](https://docs.chain.link/cre/getting-started/cli-installation))
+- Contract: Solidity ^0.8.0 with CRE receiver interfaces
+- Demo: [smartcontractkit/x402-cre-price-alerts](https://github.com/smartcontractkit/x402-cre-price-alerts)
+
+Read `references/chainlink-cre.md` for the complete setup guide, smart contract templates, CRE workflow structure, and CLI commands.
+
 ## Mainnet vs Testnet
 
 | | Testnet | Mainnet |
@@ -226,3 +262,4 @@ export const middleware = paymentProxy({
 - `references/solana.md` — Complete Solana setup
 - `references/sentinel-router.md` — Payment Router API
 - `references/packages.md` — All npm packages
+- `references/chainlink-cre.md` — Chainlink CRE workflows + on-chain automation
