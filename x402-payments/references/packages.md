@@ -71,18 +71,17 @@ Enterprise audit and orchestration infrastructure.
 
 ---
 
-## Chainlink CRE
+## Chainlink CRE Packages
 
-Chainlink CRE (Chainlink Runtime Environment) is a decentralized execution layer for on-chain/off-chain workflows. CRE is not an npm package — it's a CLI tool + SDK.
+Packages for building and paying for Chainlink CRE workflows with x402.
 
-| Tool | Purpose |
-|------|---------|
-| CRE CLI | Simulate and deploy CRE workflows |
-| CRE SDK | Build workflow triggers and callbacks in TypeScript |
-| Chainlink Price Feeds | On-chain price data (BTC, ETH, LINK, etc.) |
-| Pushover API | Push notifications to mobile devices |
+| Package | Purpose | Install |
+|---------|---------|---------|
+| `@chainlink/cre-sdk` | CRE workflow SDK — build, simulate, deploy workflows | `npm install @chainlink/cre-sdk` |
+| `@chaoschain/sdk` | Decentralized facilitator SDK — ERC-8004 agent identity | `npm install @chaoschain/sdk` |
+| `@chaoschain/x402-client` | TypeScript client for ChaosChain x402 integration | `npm install @chaoschain/x402-client` |
 
-Install CRE CLI from: [docs.chain.link/cre/getting-started/cli-installation](https://docs.chain.link/cre/getting-started/cli-installation)
+The CRE CLI (separate from the SDK) is required for simulation and deployment. Install from: [docs.chain.link/cre/getting-started/cli-installation](https://docs.chain.link/cre/getting-started/cli-installation)
 
 See `references/chainlink-cre.md` for the complete integration guide.
 
@@ -169,6 +168,7 @@ The facilitator verifies payments and settles USDC on-chain.
 | x402.org (public) | `https://x402.org/facilitator` | None | Free, rate-limited |
 | Coinbase CDP | `@coinbase/x402` | `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` | Higher limits |
 | Self-hosted | Run your own | N/A | Full control |
+| ChaosChain | `https://facilitator.chaoscha.in` | None | Decentralized BFT, 1% fee, no API keys |
 
 ### Using Coinbase CDP Facilitator
 

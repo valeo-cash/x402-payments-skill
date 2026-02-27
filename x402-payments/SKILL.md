@@ -57,11 +57,13 @@ When a user asks for x402 help, determine three things:
 - **Complex** (multiple endpoints, budget caps, audit trails, AI agents making autonomous payments)
   → Add Sentinel Payment Router. Read `references/sentinel-router.md`
 
-### 4. Do you need on-chain automation, price feeds, or decentralized workflow execution?
+### 4. Chainlink CRE integration?
 
-- **No** — skip CRE, standard x402 setup covers most cases
-- **Yes** — Add Chainlink CRE integration
+- **Monetize a CRE workflow** — gate a Chainlink CRE workflow behind x402 payments
   → Read `references/chainlink-cre.md`
+- **Pay for a CRE workflow** — call x402-gated CRE endpoints as a client or via Sentinel Router
+  → Read `references/chainlink-cre.md`
+- **Neither** — skip CRE, standard x402 setup covers most cases
 
 ## Quick Reference: All Packages
 

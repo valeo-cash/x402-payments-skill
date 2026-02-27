@@ -6,7 +6,7 @@
 
 # x402 Payments Skill
 
-The most comprehensive x402 payments skill for AI coding agents. Teaches Claude Code, Codex, Cursor, Windsurf, and Gemini CLI how to build x402 payment infrastructure — not just consume it.
+The most comprehensive x402 payments skill for AI coding agents. Teaches Claude Code, Codex, Cursor, Windsurf, and Gemini CLI how to build x402 payment infrastructure — including Chainlink CRE workflow monetization.
 
 ## What it does
 
@@ -126,6 +126,7 @@ cp -r x402-payments-skill/x402-payments .claude/skills/
 | `references/base-evm.md` | Complete Base/EVM server + client setup (V1 + V2 packages) |
 | `references/solana.md` | Complete Solana server + client setup (Wallet Adapter, Privy, Node.js) |
 | `references/sentinel-router.md` | Payment Router — multi-endpoint orchestration, budget caps, receipts |
+| `references/chainlink-cre.md` | Chainlink CRE workflow monetization + ChaosChain decentralized facilitator |
 | `references/packages.md` | Every x402 + Sentinel npm package with install commands |
 | `.cursorrules` | Drop-in rules file for Cursor/Windsurf projects |
 | `examples/paid-api-seller/` | Ready-to-deploy Next.js paid API (Vercel one-click) |
