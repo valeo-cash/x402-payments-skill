@@ -35,6 +35,7 @@ Multi-chain support, lifecycle hooks, and modular scheme registration. Use when 
 |---------|-------|---------|
 | `@x402/evm` | Base, Ethereum, Polygon, Arbitrum | `npm install @x402/evm` |
 | `@x402/svm` | Solana | `npm install @x402/svm` |
+| Stellar | No `@x402/stellar` package. Use `@stellar/stellar-sdk` + OZ Channels facilitator with `@x402/core` | See `references/stellar.md` |
 
 ### Framework Integrations
 
@@ -100,6 +101,19 @@ npm install @x402/fetch viem
 npm install x402-solana @solana/web3.js
 ```
 
+### Stellar only
+
+```bash
+# Server
+npm install @x402/express @x402/core
+
+# Client (Browser)
+npm install @stellar/freighter-api @stellar/stellar-sdk
+
+# Client (Agent/Node.js)
+npm install @stellar/stellar-sdk
+```
+
 ### Base + Solana (V2)
 
 ```bash
@@ -111,6 +125,22 @@ npm install @x402/fetch viem
 
 # Client (Solana)
 npm install x402-solana @solana/web3.js
+```
+
+### Base + Solana + Stellar (V2 — full tri-chain)
+
+```bash
+# Server
+npm install @x402/next @x402/core @x402/evm @x402/svm
+
+# Client (Base)
+npm install @x402/fetch viem
+
+# Client (Solana)
+npm install x402-solana @solana/web3.js
+
+# Client (Stellar)
+npm install @stellar/stellar-sdk
 ```
 
 ### Full stack with Sentinel Router
@@ -152,6 +182,7 @@ The facilitator verifies payments and settles USDC on-chain.
 | x402.org (public) | `https://x402.org/facilitator` | None | Free, rate-limited |
 | Coinbase CDP | `@coinbase/x402` | `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` | Higher limits |
 | Self-hosted | Run your own | N/A | Full control |
+| OZ Channels (Stellar) | `https://channels.openzeppelin.com/x402/testnet` | `x-api-key` | Stellar-specific, fee-free, OZ Relayer plugin |
 
 ### Using Coinbase CDP Facilitator
 
@@ -214,3 +245,6 @@ const handler = createPaidMcpHandler({
 - **Node.js >= 18 required** for all packages
 - **TypeScript recommended** — all packages ship type declarations
 - **USDC only** — x402 requires EIP-3009 support, which only USDC has
+- **Stellar uses auth-entry signing (Soroban)** — wallets must support `signAuthEntry` (Freighter extension only; no mobile yet)
+- **Stellar facilitator covers ALL network fees** — clients don't need XLM
+- **Stellar uses a separate facilitator (OZ Channels)** from Base/Solana (x402.org) — configure both for multi-chain
