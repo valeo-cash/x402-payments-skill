@@ -192,6 +192,176 @@ Note: Base and Solana use x402.org; Stellar uses OZ Channels. For production tri
 
 ---
 
+## Verify on Testnet
+
+Manual end-to-end test against the Stellar x402 testnet facilitator. Validate fee-free behavior, settlement time, and auth-entry signing before building on top.
+
+### Prerequisites
+
+```bash
+# You need:
+# 1. A Stellar testnet keypair (generate at https://laboratory.stellar.org/#create-account)
+# 2. An OZ Channels API key (generate at https://channels.openzeppelin.com/testnet/gen)
+# 3. Testnet USDC funded to your keypair (use Stellar testnet friendbot + testnet USDC faucet)
+```
+
+### Step 1: Start a minimal Stellar x402 server
+
+```bash
+mkdir stellar-x402-test && cd stellar-x402-test
+npm init -y
+npm install express @x402/express @x402/core
+```
+
+```typescript
+// server.ts
+import express from "express";
+import { paymentMiddleware } from "@x402/express";
+
+const app = express();
+
+app.use(
+  paymentMiddleware(
+    {
+      "GET /api/test": {
+        accepts: [
+          {
+            scheme: "exact",
+            price: "$0.001",
+            network: "stellar:testnet",
+            payTo: process.env.STELLAR_WALLET_ADDRESS!,
+          },
+        ],
+        description: "Test endpoint",
+      },
+    },
+    {
+      url: "https://channels.openzeppelin.com/x402/testnet",
+      headers: process.env.OZ_RELAYER_API_KEY
+        ? { "x-api-key": process.env.OZ_RELAYER_API_KEY }
+        : undefined,
+    }
+  )
+);
+
+app.get("/api/test", (req, res) => {
+  res.json({ data: "Stellar x402 works", timestamp: Date.now() });
+});
+
+app.listen(3000, () => console.log("Listening on :3000"));
+```
+
+```bash
+STELLAR_WALLET_ADDRESS=G...YOUR_TESTNET_ADDRESS \
+OZ_RELAYER_API_KEY=your_key \
+npx tsx server.ts
+```
+
+### Step 2: Confirm 402 response
+
+```bash
+curl -i http://localhost:3000/api/test
+```
+
+**Expected response:**
+
+```
+HTTP/1.1 402 Payment Required
+payment-required: <base64-encoded PaymentRequirements>
+content-type: application/json
+
+{
+  "error": "Payment Required",
+  "accepts": [
+    {
+      "scheme": "exact",
+      "price": "$0.001",
+      "network": "stellar:testnet",
+      "payTo": "G..."
+    }
+  ]
+}
+```
+
+> **If you don't get a 402**: Check that the route matcher covers `/api/test` and that the middleware is applied before the route handler. If you get a 500, the facilitator config may be wrong — see Troubleshooting.
+
+### Step 3: Decode the payment-required header
+
+```bash
+# Copy the base64 value from the payment-required header
+echo "<base64_value>" | base64 -d | jq .
+```
+
+This should show the full `PaymentRequirements` object including the Stellar network identifier, price, payTo address, and any auth entry template the facilitator expects.
+
+### Step 4: Make a paid request (programmatic)
+
+```typescript
+// test-client.ts
+import { Keypair } from "@stellar/stellar-sdk";
+
+const keypair = Keypair.fromSecret(process.env.STELLAR_SECRET_KEY!);
+
+async function testPaidRequest() {
+  // Step 1: Get 402
+  const res = await fetch("http://localhost:3000/api/test");
+  console.log("Status:", res.status);
+
+  if (res.status !== 402) {
+    console.log("Not a 402 — check server setup");
+    return;
+  }
+
+  const paymentRequired = res.headers.get("payment-required");
+  console.log("Payment requirements received:", !!paymentRequired);
+
+  // Step 2: Parse and sign
+  const requirements = JSON.parse(
+    Buffer.from(paymentRequired!, "base64").toString()
+  );
+  console.log("Requirements:", JSON.stringify(requirements, null, 2));
+
+  // Step 3: Sign auth entry
+  // NOTE: The exact signing flow depends on how the OZ facilitator
+  // structures the auth entry. This may need adjustment after testing.
+  // Document the actual auth entry format here once confirmed.
+  const stellarReq = requirements.find((r: any) =>
+    r.network?.startsWith("stellar:")
+  );
+
+  if (!stellarReq) {
+    console.log("No Stellar payment option in requirements");
+    return;
+  }
+
+  console.log("Stellar option found:", stellarReq);
+
+  // TODO: Complete the signing flow once auth entry format is confirmed.
+  // The auth entry structure from OZ Channels may differ from the
+  // generic Soroban signAuthEntry pattern. Document what you find.
+}
+
+testPaidRequest().catch(console.error);
+```
+
+```bash
+STELLAR_SECRET_KEY=S...YOUR_TESTNET_SECRET npx tsx test-client.ts
+```
+
+### What to Record
+
+After running these tests, update this section with:
+
+**Last verified**: [DATE]
+**Testnet facilitator status**: [working / partially working / down]
+**402 response format**: [matches expected / differs — describe]
+**Auth entry format**: [describe the actual structure from OZ Channels]
+**End-to-end payment**: [confirmed / not yet confirmed]
+**Actual settlement time**: [measured time]
+**Fee paid by client**: [confirm zero / note if any fee was required]
+
+---
+
 ## Client: Browser with Freighter
 
 Use the Freighter browser extension and `signAuthEntry` for Soroban auth-entry signing. Freighter is the primary wallet for x402 on Stellar; Freighter Mobile does not support x402 yet.
@@ -398,6 +568,38 @@ STELLAR_SECRET_KEY=S...             # Signing secret key (NEVER commit)
 |---------|--------|-----------------|--------|
 | Stellar Testnet | `stellar:testnet` | `https://channels.openzeppelin.com/x402/testnet` | Testnet USDC |
 | Stellar Mainnet | `stellar:pubnet` | Coming soon | USDC, PYUSD, USDY (SEP-41) |
+
+---
+
+## Known Limitations & Current Status
+
+Honest status of what works today and what does not.
+
+#### Current Status (as of [DATE])
+
+- **Mainnet facilitator**: NOT YET AVAILABLE. Only testnet is live at `https://channels.openzeppelin.com/x402/testnet`. Do not use this doc to build mainnet production systems until a mainnet facilitator URL is published.
+
+- **Freighter Mobile**: Does not support x402 (no signAuthEntry). Browser extension only.
+
+- **@x402/stellar package**: Does not exist. Stellar support uses @stellar/stellar-sdk + OZ Channels + @x402/core/@x402/express. This may change if/when Coinbase merges Stellar into the main x402 monorepo.
+
+- **Auth entry format**: The exact format of the Soroban auth entry returned by OZ Channels in the payment-required header has not been independently verified in this doc. The client examples show the expected pattern but may need adjustment once tested.
+
+- **Fee-free claims**: The Stellar blog states the facilitator covers all network fees. This should be confirmed on testnet — check whether your testnet account's XLM balance changes after a payment.
+
+- **Settlement time**: "Under 5 seconds" is the Stellar blog's claim. Measure actual end-to-end latency (curl timestamp diff) and record it in the verification section above.
+
+- **Multi-chain facilitator routing**: The tri-chain pattern (Base + Solana + Stellar) uses two different facilitators. This has not been tested as a unified server config. Verify that @x402/express or @x402/next can route to different facilitators per-network.
+
+- **x402-flash-stellar-sdk**: Listed on npm but marked 0.1.x. Treat as experimental. Payment channel lifecycle (open, topup, close) should be tested independently.
+
+#### What Would Make This Doc "Verified"
+
+1. Someone runs the testnet curl test above and records the actual 402 response format
+2. A complete end-to-end payment is confirmed (402 → sign → retry → 200)
+3. Settlement time and fee behavior are measured
+4. Multi-chain server config is tested with real requests on ≥2 chains
+5. The "Last verified" field in the Verify on Testnet section is filled with a real date
 
 ---
 
